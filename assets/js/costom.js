@@ -259,9 +259,8 @@ var map4 = new mapboxgl.Map({
      zoom: 6
 });
 
-
-const start = [72.960200, 23.591800];
-const end = [73.933039, 19.133167];
+const start = [72.593099,23.012026];
+const end = [73.856743, 18.520430];
 
 const directionsRequest = `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
 
@@ -316,25 +315,19 @@ map4.on('load', async () => {
 
     let currentCoordinateIndex = 0;
     const coordinates = data.routes[0].geometry.coordinates;
-    const totalDistance = data.routes[0].distance;
+    const totalDistance = data.routes[0].distance / 1000; // Convert distance to kilometers
 
     const distanceElement = document.createElement('div');
     distanceElement.className = 'distance';
-    distanceElement.innerText = (totalDistance / 1000).toFixed(2) + 'km';
+    distanceElement.innerText = totalDistance.toFixed(2) + 'km';
     objectMarker.getElement().appendChild(distanceElement);
 
     function moveObject() {
-        if (currentCoordinateIndex < coordinates.length - 1) {
-            currentCoordinateIndex++;
-        } else {
-            return; // Stop the truck from moving in a loop
-        }
-
         const startPoint = coordinates[currentCoordinateIndex];
         const endPoint = coordinates[currentCoordinateIndex + 1];
 
         const startTime = new Date().getTime();
-        const duration = 350; // Animation duration in milliseconds
+        const duration = 300; // Animation duration in milliseconds
 
         function animateMarker() {
             const currentTime = new Date().getTime();
@@ -349,6 +342,13 @@ map4.on('load', async () => {
             if (progress < 1) {
                 requestAnimationFrame(animateMarker);
             } else {
+                currentCoordinateIndex++;
+
+                if (currentCoordinateIndex >= coordinates.length - 1) {
+                    currentCoordinateIndex = 0; // Reset to start point to start the loop again
+                }
+
+                distanceElement.innerText = ((currentCoordinateIndex * totalDistance) / (coordinates.length - 1)).toFixed(2) + ' km'; // Update distance above the truck icon
                 moveObject(); // Move to the next segment of the line
             }
         }
@@ -370,6 +370,118 @@ function createMarkerElement(iconUrl) {
 
     return marker;
 }
+
+
+// const start = [72.960200, 23.591800];
+// const end = [73.933039, 19.133167];
+
+// const directionsRequest = `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
+
+// map4.on('load', async () => {
+//     const response = await fetch(directionsRequest);
+//     const data = await response.json();
+
+//     const geojson = {
+//         type: 'FeatureCollection',
+//         features: [
+//             {
+//                 type: 'Feature',
+//                 properties: {},
+//                 geometry: data.routes[0].geometry
+//             }
+//         ]
+//     };
+
+//     map4.addSource('line', {
+//         type: 'geojson',
+//         data: geojson
+//     });
+
+//     // Add line layer
+//     map4.addLayer({
+//         type: 'line',
+//         source: 'line',
+//         id: 'line-layer',
+//         paint: {
+//             'line-color': '#55d5a5',
+//             'line-width': 4,
+//             // 'line-dasharray': [0, 4, 3]
+//         }
+//     });
+
+//     new mapboxgl.Marker({ color: '#13BEE1' })
+//         .setLngLat(start)
+//         .addTo(map4);
+
+//     new mapboxgl.Marker({ color: '#13BEE1' })
+//         .setLngLat(end)
+//         .addTo(map4);
+
+//     // Add a moving object with a car icon
+//     const objectMarker = new mapboxgl.Marker({
+//         element: createMarkerElement('truckk.png'), // Replace 'car-icon.png' with your custom car icon image path
+//         anchor: 'bottom',
+//         rotationAlignment: 'map'
+//     })
+//     .setLngLat(start)
+//     .addTo(map4);
+
+//     let currentCoordinateIndex = 0;
+//     const coordinates = data.routes[0].geometry.coordinates;
+//     const totalDistance = data.routes[0].distance;
+
+//     const distanceElement = document.createElement('div');
+//     distanceElement.className = 'distance';
+//     distanceElement.innerText = (totalDistance / 1000).toFixed(2) + 'km';
+//     objectMarker.getElement().appendChild(distanceElement);
+
+//     function moveObject() {
+//         if (currentCoordinateIndex < coordinates.length - 1) {
+//             currentCoordinateIndex++;
+//         } else {
+//             return; // Stop the truck from moving in a loop
+//         }
+
+//         const startPoint = coordinates[currentCoordinateIndex];
+//         const endPoint = coordinates[currentCoordinateIndex + 1];
+
+//         const startTime = new Date().getTime();
+//         const duration = 350; // Animation duration in milliseconds
+
+//         function animateMarker() {
+//             const currentTime = new Date().getTime();
+//             const elapsed = currentTime - startTime;
+//             const progress = elapsed / duration;
+
+//             const lng = startPoint[0] + (endPoint[0] - startPoint[0]) * progress;
+//             const lat = startPoint[1] + (endPoint[1] - startPoint[1]) * progress;
+
+//             objectMarker.setLngLat([lng, lat]);
+
+//             if (progress < 1) {
+//                 requestAnimationFrame(animateMarker);
+//             } else {
+//                 moveObject(); // Move to the next segment of the line
+//             }
+//         }
+
+//         animateMarker();
+//     }
+
+//     moveObject();
+// });
+
+// // Helper function to create a custom marker element
+// function createMarkerElement(iconUrl) {
+//     const marker = document.createElement('div');
+//     marker.className = 'custom-marker';
+//     marker.style.backgroundImage = `url(${iconUrl})`;
+//     marker.style.width = '40px';
+//     marker.style.height = '40px';
+//     marker.style.backgroundSize = 'cover';
+
+//     return marker;
+// }
 
 
 
